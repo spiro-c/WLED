@@ -68,7 +68,74 @@ void wsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
           //lastInterfaceUpdate = millis() - (INTERFACE_UPDATE_COOLDOWN -500); // ESP8266 does not like this
         }
       }
-    } else {
+      else
+      {
+        // Start of binary data
+        // pixel index
+        size_t pi = 0;
+        // reset to 0 position
+        if (len == 1)
+        {
+          pi = data[0];
+          realtimeLock(10000, 1);
+        }
+        else if (len > 1)
+        {
+          realtimeLock(10000, 1);
+          uint16_t totalLen = strip.getLengthTotal();
+          uint8_t *pix = data;
+          // unsigned char *pix = (unsigned char *)data;
+          for (uint16_t i = 0; i < totalLen; i++)
+          {
+            setRealtimePixel(i, pix[pi], pix[pi + 1], pix[pi + 2], 0);
+            pi += 3;
+          }
+
+          // client->text(F("Binary"));
+        }
+      }
+    }
+    else
+    {
+      uint16_t c = 0;
+      if (info->index == 0)
+      {
+        if (info->num == 0)
+          c = 0;
+      }
+
+      if (info->message_opcode == WS_TEXT)
+      {
+        data[len] = 0;
+        client->text(F("{\"error\":9}")); // we do not handle split packets right now
+      }
+      else
+      {
+        realtimeLock(10000, 1);
+        uint16_t start = info->index;
+        uint16_t stop = start + len;
+        // uint8_t *pix = data;
+
+        unsigned char *pix = (unsigned char *)data;
+        for (uint16_t i = start; i < stop; i++)
+        {
+          setRealtimePixel(i, pix[c], pix[c + 1], pix[c + 2], 0);
+          c += 3;
+        }
+        // Serial.print(F("C: "));
+        // Serial.println(c);
+        Serial.print(F("Start: "));
+        Serial.println(start);
+        Serial.print(F("Index is: "));
+        Serial.println(info->index);
+        Serial.print(F("Len is: "));
+        Serial.println(len);
+        Serial.print(F("Index plus Len is: "));
+        Serial.println(info->index + len);
+        Serial.print(F("Stop: "));
+        Serial.println(stop);
+        // client->text(F("Binary"));
+      }
       //message is comprised of multiple frames or the frame is split into multiple packets
       //if(info->index == 0){
         //if (!wsFrameBuffer && len < 4096) wsFrameBuffer = new uint8_t[4096];

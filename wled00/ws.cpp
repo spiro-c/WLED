@@ -72,23 +72,22 @@ void wsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
       {
         // Start of binary data
         // pixel index
-        size_t pi = 0;
+        size_t c = 0;
         // reset to 0 position
         if (len == 1)
         {
-          pi = data[0];
+          c = data[0];
           realtimeLock(10000, 1);
         }
         else if (len > 1)
         {
           realtimeLock(10000, 1);
           uint16_t totalLen = strip.getLengthTotal();
-          uint8_t *pix = data;
           // unsigned char *pix = (unsigned char *)data;
           for (uint16_t i = 0; i < totalLen; i++)
           {
-            setRealtimePixel(i, pix[pi], pix[pi + 1], pix[pi + 2], 0);
-            pi += 3;
+            setRealtimePixel(i, data[c], data[c + 1], data[c + 2], 0);
+            c += 3;
           }
 
           // client->text(F("Binary"));
@@ -112,28 +111,28 @@ void wsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
       else
       {
         realtimeLock(10000, 1);
-        uint16_t start = info->index;
-        uint16_t stop = start + len;
+        uint16_t start = info->index/3;
+        uint16_t stop = start + len/3;
         // uint8_t *pix = data;
 
-        unsigned char *pix = (unsigned char *)data;
+        //unsigned char *pix = (unsigned char *)data;
         for (uint16_t i = start; i < stop; i++)
         {
-          setRealtimePixel(i, pix[c], pix[c + 1], pix[c + 2], 0);
+          setRealtimePixel(i, data[c], data[c + 1], data[c + 2], 0);
           c += 3;
         }
         // Serial.print(F("C: "));
         // Serial.println(c);
-        Serial.print(F("Start: "));
-        Serial.println(start);
-        Serial.print(F("Index is: "));
-        Serial.println(info->index);
-        Serial.print(F("Len is: "));
-        Serial.println(len);
-        Serial.print(F("Index plus Len is: "));
-        Serial.println(info->index + len);
-        Serial.print(F("Stop: "));
-        Serial.println(stop);
+        // Serial.print(F("Start: "));
+        // Serial.println(start);
+        // Serial.print(F("Index is: "));
+        // Serial.println(info->index);
+        // Serial.print(F("Len is: "));
+        // Serial.println(len);
+        // Serial.print(F("Index plus Len is: "));
+        // Serial.println(info->index + len);
+        // Serial.print(F("Stop: "));
+        // Serial.println(stop);
         // client->text(F("Binary"));
       }
       //message is comprised of multiple frames or the frame is split into multiple packets

@@ -7,7 +7,7 @@
 
 uint16_t wsLiveClientId = 0;
 unsigned long wsLastLiveTime = 0;
-//uint8_t* wsFrameBuffer = nullptr;
+uint8_t wsFrameBuffer[4096];
 
 #define WS_LIVE_INTERVAL 40
 
@@ -97,10 +97,13 @@ void wsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
     else
     {
       uint16_t c = 0;
+      uint16_t id = 0;
       if (info->index == 0)
       {
         if (info->num == 0)
           c = 0;
+
+       // memset(wsFrameBuffer, 0, sizeof(wsFrameBuffer));
       }
 
       if (info->message_opcode == WS_TEXT)
@@ -111,29 +114,39 @@ void wsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
       else
       {
         realtimeLock(10000, 1);
-        uint16_t start = info->index/3;
-        uint16_t stop = start + len/3;
-        // uint8_t *pix = data;
-
-        //unsigned char *pix = (unsigned char *)data;
-        for (uint16_t i = start; i < stop; i++)
-        {
-          setRealtimePixel(i, data[c], data[c + 1], data[c + 2], 0);
-          c += 3;
+        id = info->index;
+        uint16_t totalLen = strip.getLengthTotal();
+        //wsFrameBuffer[4096];
+        
+        for (size_t i = 0; i < len; i++){
+          wsFrameBuffer[id] = data[i];
+          id++;
         }
-        // Serial.print(F("C: "));
-        // Serial.println(c);
-        // Serial.print(F("Start: "));
-        // Serial.println(start);
-        // Serial.print(F("Index is: "));
-        // Serial.println(info->index);
-        // Serial.print(F("Len is: "));
-        // Serial.println(len);
-        // Serial.print(F("Index plus Len is: "));
-        // Serial.println(info->index + len);
-        // Serial.print(F("Stop: "));
-        // Serial.println(stop);
-        // client->text(F("Binary"));
+        //uint16_t totalLen = strip.getLengthTotal();
+        for (uint16_t i = 0; i < totalLen; i++)
+        {
+          setRealtimePixel(i, wsFrameBuffer[c], wsFrameBuffer[c + 1], wsFrameBuffer[c + 2], 0);
+          c += 3;
+         }
+         //memset(wsFrameBuffer, 0, sizeof(wsFrameBuffer));
+         // for (uint16_t i = start; i < stop; i++)
+         // {
+         //   setRealtimePixel(i, data[c], data[c + 1], data[c + 2], 0);
+         //   c += 3;
+         // }
+         //Serial.print(F("ID: "));
+         //Serial.println(id);
+         // Serial.print(F("Start: "));
+         // Serial.println(start);
+         // Serial.print(F("Index is: "));
+         // Serial.println(info->index);
+         // Serial.print(F("Len is: "));
+         // Serial.println(len);
+         // Serial.print(F("Index plus Len is: "));
+         // Serial.println(info->index + len);
+         // Serial.print(F("Stop: "));
+         // Serial.println(stop);
+         // client->text(F("Binary"));
       }
       //message is comprised of multiple frames or the frame is split into multiple packets
       //if(info->index == 0){
@@ -146,9 +159,12 @@ void wsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
       //}
 
       if((info->index + len) == info->len){
+        //memset(wsFrameBuffer, 0, sizeof(wsFrameBuffer));
         if(info->final){
           if(info->message_opcode == WS_TEXT) {
             client->text(F("{\"error\":9}")); // ERR_JSON we do not handle split packets right now
+          // }else{
+          //   memset(wsFrameBuffer, 0, sizeof(wsFrameBuffer));
           }
         }
       }

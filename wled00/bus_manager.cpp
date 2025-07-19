@@ -711,6 +711,10 @@ BusHub75Matrix::BusHub75Matrix(BusConfig &bc) : Bus(bc.type, bc.start, bc.autoWh
       mxconfig.mx_width = 128 * 2;
       mxconfig.mx_height = 64 / 2;
       break;
+    case 109:
+      mxconfig.mx_width = 64;
+      mxconfig.mx_height = 32;
+      break;
   }
 
   // reduce bitdepth based on total pixels
@@ -1029,7 +1033,12 @@ BusHub75Matrix::BusHub75Matrix(BusConfig &bc) : Bus(bc.type, bc.start, bc.autoWh
       fourScanPanel->setPhysicalPanelScanRate(FOUR_SCAN_64PX_HIGH);
       fourScanPanel->setRotation(0);
       break;
-  }  
+    case 109:
+      USER_PRINTLN("MatrixPanel_I2S_DMA Virtual TWO ROW 64x32");
+      fourScanPanel = new VirtualMatrixPanel((*display), 4, 1, 64, 32, CHAIN_BOTTOM_LEFT_UP);
+      fourScanPanel->setRotation(0);
+      break;
+    }  
 
   if (_valid) {
     _panelWidth = fourScanPanel ? fourScanPanel->width() : display->width();  // cache width - it will never change
